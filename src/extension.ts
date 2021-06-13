@@ -1,26 +1,60 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { join as pathJoin } from 'path';
+import { DONT_SHOW_AGAIN } from './json-consolidator/modalActions';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "json-consolidator" is now active!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('json-consolidator.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from json-consolidator!');
+	const config = vscode.workspace.getConfiguration('json-consolidator');
+
+	const supportedDirectories = config.get<Array<string>>('supportedDirectories');
+	const triggerEverywhere = config.get<boolean>('triggerEverywhere');
+	const suppressInitNotification = config.get<boolean>('suppressInitNotification');
+	const targetEditorWindow = config.get<string>('targetEditorWindow') || 'Two';
+
+	vscode.commands.executeCommand('setContext', 'ext.supportedDirectories', supportedDirectories);
+	vscode.commands.executeCommand('setContext', 'ext.triggerEverywhere', triggerEverywhere);
+
+	let disposable = vscode.commands.registerCommand('json-consolidator.editor', (path: vscode.Uri) => {
+
+		const panel = vscode.window.createWebviewPanel('json-consolidator', `Json Consolidator - ${getLastSegment(path)}`,
+			getViewColumn(targetEditorWindow),
+			{
+				retainContextWhenHidden: true,
+				enableScripts: true,
+				localResourceRoots: [vscode.Uri.file(pathJoin(context.extensionPath, 'ui'))]
+			});
+
+		panel.webview.html = '<h1> Hello world! </h1>';
 	});
 
 	context.subscriptions.push(disposable);
+
+	if (!suppressInitNotification)
+	{
+		vscode.window.showInformationMessage('Json Consolidator is ready to rock 🚀', DONT_SHOW_AGAIN)
+			.then(action => {
+				if (action && action === DONT_SHOW_AGAIN) {
+					config.update('suppressInitNotification', true, vscode.ConfigurationTarget.Global);
+				}
+			});
+	}
 }
 
-// this method is called when your extension is deactivated
 export function deactivate() {}
+
+function getViewColumn(targetEditorWindow: string): vscode.ViewColumn {
+	switch (targetEditorWindow) {
+		case 'Active':
+			return vscode.ViewColumn.Active;
+		case 'One':
+			return vscode.ViewColumn.One;
+		case 'Two':
+			return vscode.ViewColumn.Two;
+		default:
+			return vscode.ViewColumn.Two;
+	}
+}
+
+function getLastSegment(uri: vscode.Uri): string {
+	return uri.path.split('/')?.pop() || '';
+}

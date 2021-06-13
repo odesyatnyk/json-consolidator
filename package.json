@@ -4,22 +4,79 @@
 	"description": "",
 	"version": "0.0.1",
 	"engines": {
-		"vscode": "^1.57.0"
+		"vscode": "^1.56.0"
 	},
 	"categories": [
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:json-consolidator.helloWorld"
+		"onCommand:json-consolidator.editor",
+		"onStartupFinished"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "json-consolidator.helloWorld",
-				"title": "Hello World"
+				"command": "json-consolidator.editor",
+				"title": "Json Consolidator - Editor"
 			}
-		]
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"command": "json-consolidator.editor",
+					"group": "2_workspace",
+					"when": "explorerResourceIsFolder && ext.triggerEverywhere || explorerResourceIsFolder && resourceFilename in ext.supportedDirectories"
+				}
+			]
+		},
+		"configuration": {
+			"title": "Json Consolidator",
+			"properties": {
+				"json-consolidator.orderKeysOnSave": {
+					"default": true,
+					"type": "boolean",
+					"description": "Orders json keys"
+				},
+				"json-consolidator.orderKeysDirection": {
+					"default": "asc",
+					"type": "string",
+					"enum": [
+						"asc",
+						"desc"
+					],
+					"description": "Ordering direction of json keys"
+				},
+				"json-consolidator.triggerEverywhere": {
+					"default": false,
+					"type": "boolean",
+					"description": "Controls wether extension could be triggered from any directory, if false triggered only at json-consolidator.supportedDirectories"
+				},
+				"json-consolidator.supportedDirectories": {
+					"default": [
+						"i18n",
+						"locales"
+					],
+					"type": "array",
+					"description": "Names of directories where extension could be triggered"
+				},
+				"json-consolidator.targetEditorWindow": {
+					"default": "Two",
+					"type": "string",
+					"enum": [
+						"Active",
+						"One",
+						"Two"
+					],
+					"description": "Controls in what tab editor should be opened"
+				},
+				"json-consolidator.suppressInitNotification": {
+					"default": false,
+					"type": "boolean",
+					"description": "Controls wether initialization notification is shown during vscode startup"
+				}
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run package",
