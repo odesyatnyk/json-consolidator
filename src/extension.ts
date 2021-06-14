@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { join as pathJoin } from 'path';
+import { Editor } from './json-consolidator/editor';
 import { DONT_SHOW_AGAIN } from './json-consolidator/modalActions';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -24,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 				localResourceRoots: [vscode.Uri.file(pathJoin(context.extensionPath, 'ui'))]
 			});
 
-		panel.webview.html = '<h1> Hello world! </h1>';
+		const editor = new Editor(context, config, panel, path.fsPath);
 	});
 
 	context.subscriptions.push(disposable);

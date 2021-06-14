@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    </head>
+    <body>
+        <div id="app">
+            <v-app>
+                <v-app-bar app flat dark dense>
+                    <v-toolbar-title>Json Consolidator</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-btn text tile>
+                        <v-icon>
+                            mdi-plus
+                        </v-icon>
+                        Add
+                    </v-btn>
+                    <v-btn text tile>
+                        <v-icon>
+                            mdi-content-save
+                        </v-icon>
+                        Save
+                    </v-btn>
+                </v-app-bar>
+                <v-main>
+                    <v-container fluid class="pa-0">
+                        <v-data-table :headers="headers"
+                                      :items="items"
+                                      disable-pagination
+                                      fixed-header
+                                      hide-default-footer
+                                      dark
+                                      height="calc(100vh - 50px)">
+                            <template #item.Key="{ item }">
+                                <v-text-field v-model="item.key" outlined hide-details dense filled></v-text-field>
+                            </template>
+                            <template #item.en="{ item }">
+                                <v-text-field v-model="item.en" outlined hide-details dense filled></v-text-field>
+                            </template>
+                            <template #item.it="{ item }">
+                                <v-text-field v-model="item.it" outlined hide-details dense filled></v-text-field>
+                            </template>
+                        </v-data-table>
+                    </v-container>
+                </v-main>
+            </v-app>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                new Vue({
+                    el: '#app',
+                    vuetify: new Vuetify(),
+                    data() {
+                        return {
+                            count: 0,
+                            headers: [
+                                { text: 'Key', value: 'key' },
+                                { text: 'en', value: 'en' },
+                                { text: 'it', value: 'it' }
+                            ],
+                            items: [
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                },
+                                {
+                                    key: 'app.hello',
+                                    en: 'Hello',
+                                    it: 'Ciao'
+                                }
+                            ]
+                            // vscode: acquireVsCodeApi()
+                        }
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
