@@ -2,9 +2,10 @@
 <html lang="en">
     <head>
         <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" rel="stylesheet" >
         <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <title>Json Consolidator</title>
     </head>
     <body>
         <div id="app">
@@ -12,37 +13,78 @@
                 <v-app-bar app flat dark dense>
                     <v-toolbar-title>Json Consolidator</v-toolbar-title>
                     <v-spacer></v-spacer>
-                    <v-btn text tile>
-                        <v-icon>
-                            mdi-plus
-                        </v-icon>
-                        Add
+                    <v-btn icon @click="addRow">
+                        <v-tooltip bottom>
+                            <template #activator="{ on }">
+                                <v-icon v-on="on">
+                                    fa-plus
+                                </v-icon>
+                            </template>
+                            Add
+                        </v-tooltip>
                     </v-btn>
-                    <v-btn text tile>
-                        <v-icon>
-                            mdi-content-save
-                        </v-icon>
-                        Save
+                    <v-btn icon @click="saveAll">
+                        <v-tooltip bottom>
+                            <template #activator="{ on }">
+                                <v-icon v-on="on">
+                                    fa-save
+                                </v-icon>
+                            </template>
+                            Save
+                        </v-tooltip>
+                    </v-btn>
+                    <v-btn icon @click="refresh">
+                        <v-tooltip bottom>
+                            <template #activator="{ on }">
+                                <v-icon v-on="on">
+                                    fa-sync
+                                </v-icon>
+                            </template>
+                            Refresh
+                        </v-tooltip>
                     </v-btn>
                 </v-app-bar>
                 <v-main>
                     <v-container fluid class="pa-0">
-                        <v-data-table :headers="headers"
+                    <v-data-table :headers="headers"
                                       :items="items"
                                       disable-pagination
                                       fixed-header
                                       hide-default-footer
                                       dark
-                                      height="calc(100vh - 50px)">
+                                      height="calc(100vh - 50px)"
+                                      :loading="loading">
                             <template #item.Key="{ item }">
-                                <v-text-field v-model="item.key" outlined hide-details dense filled></v-text-field>
+                                <v-text-field v-model="item.key" :error-messages="item.errors" outlined dense filled></v-text-field>
                             </template>
-                            <template #item.en="{ item }">
-                                <v-text-field v-model="item.en" outlined hide-details dense filled></v-text-field>
+
+                            <template v-for="file in files" :slot="`item.${file}`" slot-scope="{ item }">
+                                <v-text-field v-model="item[file]" class="mb-0" dense outlined filled></v-text-field>
                             </template>
-                            <template #item.it="{ item }">
-                                <v-text-field v-model="item.it" outlined hide-details dense filled></v-text-field>
+
+                            <template #item.actions="{ item }">
+                                <v-btn icon small @click="saveItem(item)">
+                                    <v-tooltip bottom>
+                                        <template #activator="{ on }">
+                                            <v-icon small v-on="on">
+                                                fa-save
+                                            </v-icon>
+                                        </template>
+                                        Save
+                                    </v-tooltip>
+                                </v-btn>
+                                <v-btn icon small @click="deleteItem(item)">
+                                    <v-tooltip bottom>
+                                        <template #activator="{ on }">
+                                            <v-icon small v-on="on">
+                                                fa-trash
+                                            </v-icon>
+                                        </template>
+                                        Delete
+                                    </v-tooltip>
+                                </v-btn>
                             </template>
+
                         </v-data-table>
                     </v-container>
                 </v-main>
@@ -55,147 +97,116 @@
             document.addEventListener('DOMContentLoaded', function () {
                 new Vue({
                     el: '#app',
-                    vuetify: new Vuetify(),
+                    vuetify: new Vuetify({
+                        icons: {
+                            iconfont: 'fa',
+                        },
+                    }),
                     data() {
                         return {
-                            count: 0,
-                            headers: [
-                                { text: 'Key', value: 'key' },
-                                { text: 'en', value: 'en' },
-                                { text: 'it', value: 'it' }
-                            ],
+                            loading: false,
+                            files: ['en', 'it', 'de', 'ru'],
                             items: [
                                 {
+                                    id: 1,
                                     key: 'app.hello',
+                                    errors: [],
                                     en: 'Hello',
                                     it: 'Ciao'
                                 },
                                 {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    key: 'app.hello',
-                                    en: 'Hello',
-                                    it: 'Ciao'
+                                    id: 2,
+                                    key: 'app.error',
+                                    errors: [],
+                                    en: 'Error',
+                                    it: 'Errori',
+                                    ru: 'Ошибка'
                                 }
-                            ]
-                            // vscode: acquireVsCodeApi()
+                            ],
+                            vscode: acquireVsCodeApi()
+                        }
+                    },
+                    created() {
+                        window.addEventListener('message', event => {
+                            this.handleMessage(event.data);
+                        });
+                    },
+                    methods: {
+                        handleMessage(message) {
+                            switch (message.command) {
+                                case 'populateData':
+                                    this.populateData(message.data);
+                                    break;
+                            
+                                default:
+                                    break;
+                            }
+                        },
+                        populateData(data) {
+
+                        },
+                        saveCallback(data) {
+
+                        },
+                        saveAllCallback(data) {
+
+                        },
+                        deleteCallback(data) {
+
+                        },
+                        saveItem(item) {
+                            this.vscode.postMessage({
+                                command: 'saveItem',
+                                data: item
+                            });
+                        },
+                        deleteItem(item) {
+                            this.items = this.items.filter(x => x.id !== item.id);
+                            this.vscode.postMessage({
+                                command: 'deleteItem',
+                                data: item
+                            });
+                        },
+                        addRow() {
+                            this.items.push({
+                                id: this.nextId
+                            })
+                        },
+                        saveAll() {
+                            this.vscode.postMessage({
+                                command: 'saveAll'
+                            });
+                        },
+                        refresh() {
+                            this.vscode.postMessage({
+                                command: 'refresh'
+                            });
+                        }
+                    },
+                    computed: {
+                        headers() {
+                            return [
+                                { text: 'Key', value: 'key', cellClass: 'pt-2 pb-0' },
+                                ...this.files.map(x => { return { text: x, value: x, cellClass: 'pt-2 pb-0' } }),
+                                { text: '', value: 'actions', align: 'end', width: 95 }
+                            ];
+                        },
+                        nextId() {
+                            if (!this.items || this.items.length === 0)
+                                return -1;
+
+                            const min = this.items.reduce((prev, curr) => prev.Cost < curr.Cost ? prev : curr);
+                            return (min && min.id < 0) ? min.id - 1 : -1;
                         }
                     }
                 });
             });
         </script>
+
+        <style lang="text/css">
+            .v-text-field__details {
+                margin-bottom: 4px !important;
+            }
+        </style>
     </body>
 </html>
