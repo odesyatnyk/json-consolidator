@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 				localResourceRoots: [vscode.Uri.file(pathJoin(context.extensionPath, 'ui'))]
 			});
 
-		const editor = new Editor(context, config, panel, path.fsPath);
+		const editor = new Editor(context, panel, path.fsPath);
 	});
 
 	context.subscriptions.push(disposable);

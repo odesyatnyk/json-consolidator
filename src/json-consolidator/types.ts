@@ -1,4 +1,4 @@
-export interface IDataEntry extends IValidationResult {
+export interface IDataEntry extends IValidationResult, IIndexable {
     id: number;
     key: string;
     errors: string[];
@@ -14,6 +14,10 @@ export interface IValidationResult {
 export interface ICommand<T = any> {
     command: string;
     data: T;
+}
+
+export interface IIndexable {
+    [name: string]: string | number | string[] | { [file: string]: string; };
 }
 
 export enum Errors {

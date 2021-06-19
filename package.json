@@ -39,11 +39,11 @@
 					"description": "Orders json keys"
 				},
 				"json-consolidator.orderKeysDirection": {
-					"default": "asc",
+					"default": "Ascending",
 					"type": "string",
 					"enum": [
-						"asc",
-						"desc"
+						"Ascending",
+						"Descending"
 					],
 					"description": "Ordering direction of json keys"
 				},

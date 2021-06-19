@@ -1,22 +1,21 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { join as pathJoin } from 'path';
-import { IDataEntry, ICommand, Errors, IValidationResult } from './types';
-import { SAVE_ERROR, SAVE_SUCCESS } from './messages';
+import { IDataEntry, ICommand, IIndexable, Errors, IValidationResult } from './types';
+import { SAVE_ERROR, SAVE_SUCCESS, DATA_RERESHED } from './messages';
 
+const JSON_EX = '.json';
 export class Editor {
 
     private context: vscode.ExtensionContext;
-    private config: vscode.WorkspaceConfiguration;
     private panel: vscode.WebviewPanel;
     private path: string;
 
     private files: string[] = [];
     private data: IDataEntry[] = [];
 
-    constructor(context: vscode.ExtensionContext, config: vscode.WorkspaceConfiguration, panel: vscode.WebviewPanel, path: string) {
+    constructor(context: vscode.ExtensionContext, panel: vscode.WebviewPanel, path: string) {
         this.context = context;
-        this.config = config;
         this.panel = panel;
         this.path = path;
         this.bindCommands();
@@ -29,12 +28,12 @@ export class Editor {
         this.files = [];
         this.data = [];
 
-        fs.readdirSync(this.path).filter(f => f.endsWith('.json')).forEach(fileName => {
-            const file = fileName.replace('.json', '');
+        fs.readdirSync(this.path).filter(f => f.endsWith(JSON_EX)).forEach(fileName => {
+            const file = fileName.replace(JSON_EX, '');
             this.files.push(file);
 
             try {
-                const fileData = JSON.parse(fs.readFileSync(pathJoin(this.path, file + '.json')).toString());
+                const fileData = JSON.parse(fs.readFileSync(pathJoin(this.path, file + JSON_EX)).toString());
 
                 if (fileData) {
                     const keys = Object.keys(fileData);
@@ -97,6 +96,7 @@ export class Editor {
             })
             }
         });
+        vscode.window.showInformationMessage(DATA_RERESHED);
     }
 
     saveAll(items: IDataEntry[]) {
@@ -137,7 +137,38 @@ export class Editor {
     }
 
     proceedSave(items: IDataEntry[]) {
+        const mustOrder = vscode.workspace.getConfiguration('json-consolidator').get<boolean>('orderKeysOnSave');
+        const desc = vscode.workspace.getConfiguration('json-consolidator').get<string>('orderKeysDirection') === 'Descending';
         
+        const keyComparer = (a: IDataEntry, b: IDataEntry): number => {
+            if (a.key < b.key) {
+                return desc ? 1 : -1;
+            }
+
+            if (a.key > b.key) {
+                return desc ? -1 : 1;
+            }
+
+            return 0;
+        };
+
+        this.files.forEach(f => {
+            
+            let content: IIndexable = {};
+
+            if (mustOrder) {
+                items.sort(keyComparer).map(x => {
+                    content[x.key] = x[f] || '';
+                });
+            } else {
+                items.map(x => {
+                    content[x.key] = x[f] || '';
+                });
+            }
+
+            const json = JSON.stringify(content, null, 4);
+            fs.writeFileSync(pathJoin(this.path, f + JSON_EX), json);
+        });
     }
 
     private send(command: ICommand) {
