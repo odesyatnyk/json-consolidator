@@ -63,7 +63,26 @@ export class Editor {
 
     renderView(): string {
         const template = vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'index.html'));
-        return fs.readFileSync(template.fsPath).toString();
+
+        const links = [
+            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'roboto.css')),
+            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'fontawesome.min.css')),
+            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'vuetify.min.css'))
+        ].map(u => `<link rel="stylesheet" href="${this.getResourcePath(u)}">`).join('\n');
+
+        const scripts = [
+            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'vue.min.js')),
+            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'vuetify.min.js')),
+            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'app.js'))
+        ].map(s => `<script src="${this.getResourcePath(s)}"></script>`).join('\n');
+
+        return fs.readFileSync(template.fsPath).toString()
+            .replace('HEAD_PLACEHOLDER', links)
+            .replace('SCRIPTS_PLACEHOLDER', scripts);
+    }
+
+    getResourcePath(uri: vscode.Uri): string {
+        return (this.panel.webview.asWebviewUri ? this.panel.webview.asWebviewUri(uri) : uri.with({ scheme: 'vscode-resource' })).toString();
     }
 
     bindCommands() {
