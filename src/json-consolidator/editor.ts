@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { join as pathJoin } from 'path';
-import { IDataEntry } from './types';
+import { IDataEntry, ICommand, Errors, IValidationResult } from './types';
+import { SAVE_ERROR, SAVE_SUCCESS } from './messages';
 
 export class Editor {
 
@@ -18,13 +19,15 @@ export class Editor {
         this.config = config;
         this.panel = panel;
         this.path = path;
-
-        this.readData();
+        this.bindCommands();
         this.panel.webview.html = this.renderView();
     }
 
     readData() {
         let id = 1;
+
+        this.files = [];
+        this.data = [];
 
         fs.readdirSync(this.path).filter(f => f.endsWith('.json')).forEach(fileName => {
             const file = fileName.replace('.json', '');
@@ -46,6 +49,7 @@ export class Editor {
                             this.data.push({
                                 id: id++,
                                 key: key,
+                                errors: [],
                                 values: { [file]: fileData[key] }
                             });
                         }
@@ -53,7 +57,7 @@ export class Editor {
                 }
             }
             catch {
-                console.error(`${file} is invalid json`);
+                vscode.window.showErrorMessage(`Failed to parse ${fileName}`);
             }
         });
     }
@@ -61,5 +65,82 @@ export class Editor {
     renderView(): string {
         const template = vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'index.html'));
         return fs.readFileSync(template.fsPath).toString();
+    }
+
+    bindCommands() {
+        this.panel.webview.onDidReceiveMessage((message: ICommand) => {
+            switch (message.command) {
+                case 'refresh':
+                    this.refreshData();
+                    return;
+                case 'saveAll':
+                    this.saveAll(message.data);
+                    return;
+                }
+            });
+    }
+
+    refreshData() {
+        this.readData();
+
+        this.send({
+            command: 'populateData',
+            data: {
+                files: this.files,
+                items: this.data.map(i => { return {
+                    id: i.id,
+                    key: i.key,
+                    originalKey: i.key,
+                    errors: i.errors,
+                    ...i.values
+                };
+            })
+            }
+        });
+    }
+
+    saveAll(items: IDataEntry[]) {
+        const errors = this.validate(items);
+
+        if (errors.length > 0)
+        {
+            this.send({
+                command: 'showErrors',
+                data: { errors }
+            });
+
+            vscode.window.showErrorMessage(SAVE_ERROR);
+        }
+        else {
+            this.proceedSave(items);
+            this.refreshData();
+            vscode.window.showInformationMessage(SAVE_SUCCESS);
+        }
+    }
+
+    validate(items: IDataEntry[]): IValidationResult[] {
+        let errors: IValidationResult[] = [];
+
+        errors = items.filter(x => x.key === undefined || x.key === null || x.key === '')
+            .map(x => {return {...x, errors: [ Errors.emptyKey ]};});;
+        
+        items.forEach(x => {
+            const dup = items.filter(y => !errors.some(d => d.key === x.key) && y.key === x.key && y.id !== x.id)
+                .map(x => {return {...x, errors: [ Errors.duplicatedKey ]};});
+
+            if (dup.length > 0) {
+                errors = [...errors, ...dup, ...[x]];
+            }
+        });
+        
+        return errors;
+    }
+
+    proceedSave(items: IDataEntry[]) {
+        
+    }
+
+    private send(command: ICommand) {
+        this.panel.webview.postMessage(command);
     }
 }

@@ -10,8 +10,33 @@
     <body>
         <div id="app">
             <v-app>
-                <v-app-bar app flat dark dense>
+                <v-app-bar app flat dark>
                     <v-toolbar-title>Json Consolidator</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-col cols="6" class="pa-0">
+                        <v-text-field v-model="search" solo-inverted flat dense prepend-inner-icon="fa-search" hide-details clearable color="grey darken-3"></v-text-field>
+                    </v-col>
+                    <v-menu  dark open-on-hover bottom offset-y :close-on-content-click="false">
+                        <template #activator="{ on }">
+                            <v-btn icon v-on="on">
+                                <v-badge :value="showSettingsBadge" :color="errorsOnly ? 'error' : 'primary'" dot>
+                                    <v-icon>
+                                        fa-cog
+                                    </v-icon>
+                                </v-badge>
+                            </v-btn>
+                        </template>
+                        <v-list dark dense>
+                            <v-list-item dense>
+                                <v-switch v-model="searchIncludeNew" :disabled="errorsOnly" color="primary" dense inset label="Include new"></v-switch>
+                            </v-list-item>
+                            <v-list-item dense>
+                                <v-switch v-model="errorsOnly" color="error" dense inset label="Errors only" @change="onErrorsOnlyToggle"></v-switch>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
+                    
+
                     <v-spacer></v-spacer>
                     <v-btn icon @click="addRow">
                         <v-tooltip bottom>
@@ -45,15 +70,21 @@
                     </v-btn>
                 </v-app-bar>
                 <v-main>
-                    <v-container fluid class="pa-0">
-                    <v-data-table :headers="headers"
-                                      :items="items"
-                                      disable-pagination
-                                      fixed-header
-                                      hide-default-footer
-                                      dark
-                                      height="calc(100vh - 50px)"
-                                      :loading="loading">
+                    <v-container fluid class="pa-0 rounded-0">
+                        <v-data-table :headers="headers"
+                                    :items="items"
+                                    disable-pagination
+                                    fixed-header
+                                    hide-default-footer
+                                    dark
+                                    height="calc(100vh - 50px)"
+                                    class="rounded-0"
+                                    :custom-filter="customFilter"
+                                    :custom-sort="customSort"
+                                    :sort-by="['key']"
+                                    :search="search"
+                                    :loading="loading">
+
                             <template #item.Key="{ item }">
                                 <v-text-field v-model="item.key" :error-messages="item.errors" outlined dense filled></v-text-field>
                             </template>
@@ -63,17 +94,7 @@
                             </template>
 
                             <template #item.actions="{ item }">
-                                <v-btn icon small @click="saveItem(item)">
-                                    <v-tooltip bottom>
-                                        <template #activator="{ on }">
-                                            <v-icon small v-on="on">
-                                                fa-save
-                                            </v-icon>
-                                        </template>
-                                        Save
-                                    </v-tooltip>
-                                </v-btn>
-                                <v-btn icon small @click="deleteItem(item)">
+                                <v-btn icon small color="red lighten-2" @click="deleteItem(item)">
                                     <v-tooltip bottom>
                                         <template #activator="{ on }">
                                             <v-icon small v-on="on">
@@ -91,8 +112,8 @@
             </v-app>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 new Vue({
@@ -104,25 +125,12 @@
                     }),
                     data() {
                         return {
+                            search: '',
                             loading: false,
-                            files: ['en', 'it', 'de', 'ru'],
-                            items: [
-                                {
-                                    id: 1,
-                                    key: 'app.hello',
-                                    errors: [],
-                                    en: 'Hello',
-                                    it: 'Ciao'
-                                },
-                                {
-                                    id: 2,
-                                    key: 'app.error',
-                                    errors: [],
-                                    en: 'Error',
-                                    it: 'Errori',
-                                    ru: 'Ошибка'
-                                }
-                            ],
+                            searchIncludeNew: false,
+                            errorsOnly: false,
+                            files: [],
+                            items: [],
                             vscode: acquireVsCodeApi()
                         }
                     },
@@ -130,6 +138,8 @@
                         window.addEventListener('message', event => {
                             this.handleMessage(event.data);
                         });
+
+                        this.refresh();
                     },
                     methods: {
                         handleMessage(message) {
@@ -137,58 +147,126 @@
                                 case 'populateData':
                                     this.populateData(message.data);
                                     break;
-                            
+                                case 'showErrors':
+                                    this.showErrors(message.data);
+                                    break;
                                 default:
                                     break;
                             }
                         },
                         populateData(data) {
-
+                            this.files = data.files;
+                            this.items = data.items;
                         },
-                        saveCallback(data) {
-
-                        },
-                        saveAllCallback(data) {
-
-                        },
-                        deleteCallback(data) {
-
-                        },
-                        saveItem(item) {
-                            this.vscode.postMessage({
-                                command: 'saveItem',
-                                data: item
+                        showErrors(data) {
+                            data.errors.forEach(error => {
+                                const row = this.items.find(x => x.id === error.id);
+                                row.errors = error.errors;
                             });
                         },
                         deleteItem(item) {
                             this.items = this.items.filter(x => x.id !== item.id);
-                            this.vscode.postMessage({
-                                command: 'deleteItem',
-                                data: item
-                            });
                         },
                         addRow() {
                             this.items.push({
-                                id: this.nextId
+                                id: this.nextId,
+                                originalKey: '',
+                                key: '',
+                                errors: []
                             })
                         },
                         saveAll() {
+                            this.clearErrors();
                             this.vscode.postMessage({
-                                command: 'saveAll'
+                                command: 'saveAll',
+                                data: this.items
+                            });
+                        },
+                        clearErrors() {
+                            this.items.forEach(i => {
+                                i.errors = [];
                             });
                         },
                         refresh() {
                             this.vscode.postMessage({
                                 command: 'refresh'
                             });
+                        },
+                        onErrorsOnlyToggle(val) {
+                            if (val) {
+                                this.searchIncludeNew = false;
+                            }
+                        },
+                        customFilter(value, search, item) {
+                            const term = search || '';
+                            const val = value || '';
+
+                            if (this.errorsOnly) {
+                                return item.errors.length > 0 && val.toLowerCase().includes(term.toLowerCase());
+                            }
+
+                            if (this.searchIncludeNew) {
+                                return item.id < 0 || val.toLowerCase().includes(term.toLowerCase());
+                            }
+
+                            return val.toLowerCase().includes(search.toLowerCase());
+                        },
+                        customSort(items, sortBy, sortDesc) {
+                            return items.sort(comparer);
+                            
+                            function comparer(a, b) {
+                                let by = sortBy[0];
+                                const desc = sortDesc[0];
+
+                                if (by === 'key') {
+                                    by = 'originalKey';
+                                }
+
+                                const valA = (a[by] || '').toLowerCase();
+                                const valB = (b[by] || '').toLowerCase();
+
+                                if (valA < valB) {
+                                    return desc ? 1 : -1;
+                                }
+
+                                if (valA > valB) {
+                                    return desc ? -1 : 1;
+                                }
+
+                                return 0;
+                            }
                         }
                     },
                     computed: {
                         headers() {
                             return [
-                                { text: 'Key', value: 'key', cellClass: 'pt-2 pb-0' },
-                                ...this.files.map(x => { return { text: x, value: x, cellClass: 'pt-2 pb-0' } }),
-                                { text: '', value: 'actions', align: 'end', width: 95 }
+                                {
+                                    value: 'errors',
+                                    align: ' d-none',
+                                    filter: errors => {
+                                        if (this.errorsOnly) {
+                                            return errors.length > 0;
+                                        }
+
+                                        return true;
+                                    }
+                                },
+                                {
+                                    text: 'Key',
+                                    value: 'key',
+                                    cellClass: 'pt-2 pb-0'
+                                },
+                                ...this.files.map(x => { return {
+                                    text: x,
+                                    value: x,
+                                    cellClass: 'pt-2 pb-0'
+                                } }),
+                                {
+                                    text: '',
+                                    value: 'actions',
+                                    align: 'end',
+                                    width: 45
+                                }
                             ];
                         },
                         nextId() {
@@ -197,6 +275,9 @@
 
                             const min = this.items.reduce((prev, curr) => prev.Cost < curr.Cost ? prev : curr);
                             return (min && min.id < 0) ? min.id - 1 : -1;
+                        },
+                        showSettingsBadge() {
+                            return this.searchIncludeNew || this.errorsOnly;
                         }
                     }
                 });
@@ -204,8 +285,16 @@
         </script>
 
         <style lang="text/css">
+            .v-data-table-header.v-data-table-header-mobile {
+                display: none;
+            }
+
             .v-text-field__details {
                 margin-bottom: 4px !important;
+            }
+
+            html {
+                overflow-y: hidden;
             }
         </style>
     </body>
