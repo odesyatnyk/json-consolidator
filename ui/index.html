@@ -8,9 +8,7 @@
 	<body>
 		<div id="app">
 			<v-app>
-				<v-app-bar app flat dark>
-					<v-toolbar-title>Json Consolidator</v-toolbar-title>
-					<v-spacer></v-spacer>
+				<v-app-bar app flat>
 					<v-col cols="6" class="pa-0">
 						<v-text-field
 							v-model="search"
@@ -24,7 +22,6 @@
 						></v-text-field>
 					</v-col>
 					<v-menu
-						dark
 						open-on-hover
 						bottom
 						offset-y
@@ -41,7 +38,7 @@
 								</v-badge>
 							</v-btn>
 						</template>
-						<v-list dark dense>
+						<v-list dense>
 							<v-list-item dense>
 								<v-switch
 									v-model="searchIncludeNew"
@@ -96,11 +93,9 @@
 						<v-data-table
 							:headers="headers"
 							:items="items"
-							disable-pagination
 							fixed-header
-							hide-default-footer
-							dark
-							height="calc(100vh - 50px)"
+							height="calc(100vh - 115px)"
+							:items-per-page="10"
 							class="rounded-0"
 							:custom-filter="customFilter"
 							:custom-sort="customSort"
@@ -109,13 +104,15 @@
 							:loading="loading"
 						>
 							<template #item.Key="{ item }">
-								<v-text-field
+								<v-textarea
 									v-model="item.key"
-									:error-messages="item.errors"
-									outlined
-									dense
 									filled
-								></v-text-field>
+									flat
+									:error-messages="item.errors"
+									:rounded="false"
+									:auto-grow="false"
+									:rows="2"
+									></v-textarea>
 							</template>
 
 							<template
@@ -123,13 +120,16 @@
 								:slot="`item.${file}`"
 								slot-scope="{ item }"
 							>
-								<v-text-field
+								<v-textarea
 									v-model="item[file]"
-									class="mb-0"
-									dense
-									outlined
+									class="mt-0 mb-0"
 									filled
-								></v-text-field>
+									flat
+									class="rounded-0"
+									:rounded="false"
+									:auto-grow="false"
+									:rows="2"
+									></v-textarea>
 							</template>
 
 							<template #item.actions="{ item }">
@@ -154,12 +154,12 @@
 		</div>
 		SCRIPTS_PLACEHOLDER
 		<style lang="text/css">
-			.v-data-table-header.v-data-table-header-mobile {
-				display: none;
-			}
-
 			.v-text-field__details {
 				margin-bottom: 4px !important;
+			}
+
+			.v-data-table .v-text-field .v-input__control {
+				border-radius: 0 !important;
 			}
 
 			html {

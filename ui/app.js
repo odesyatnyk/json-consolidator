@@ -5,6 +5,7 @@
 			icons: {
 				iconfont: "fa",
 			},
+			theme: { dark: true }
 		}),
 		data() {
 			return {
