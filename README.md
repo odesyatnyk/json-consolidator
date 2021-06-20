@@ -4,8 +4,8 @@
 
 ## Installation
 
-* Download `vsix` file from [VS Code Marketplace](https://marketplace.visualstudio.com/vscode)
-* Search for `json-consolidator` in `Extensions` tab of VS Code
+* Download `vsix` file from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Exxend.json-consolidator)
+* Search for `Exxend.json-consolidator` in `Extensions` tab of VS Code
 
 ## Features
 
