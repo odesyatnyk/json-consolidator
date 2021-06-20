@@ -1,196 +1,243 @@
-import * as vscode from 'vscode';
-import * as fs from 'fs';
-import { join as pathJoin } from 'path';
-import { IDataEntry, ICommand, IIndexable, Errors, IValidationResult } from './types';
-import { SAVE_ERROR, SAVE_SUCCESS, DATA_RERESHED } from './messages';
+import * as vscode from "vscode";
+import * as fs from "fs";
+import { join as pathJoin } from "path";
+import {
+	IDataEntry,
+	ICommand,
+	IIndexable,
+	Errors,
+	IValidationResult,
+} from "./types";
+import { SAVE_ERROR, SAVE_SUCCESS, DATA_RERESHED } from "./messages";
 
-const JSON_EX = '.json';
+const JSON_EX = ".json";
 export class Editor {
+	private context: vscode.ExtensionContext;
+	private panel: vscode.WebviewPanel;
+	private path: string;
 
-    private context: vscode.ExtensionContext;
-    private panel: vscode.WebviewPanel;
-    private path: string;
+	private files: string[] = [];
+	private data: IDataEntry[] = [];
 
-    private files: string[] = [];
-    private data: IDataEntry[] = [];
+	constructor(
+		context: vscode.ExtensionContext,
+		panel: vscode.WebviewPanel,
+		path: string
+	) {
+		this.context = context;
+		this.panel = panel;
+		this.path = path;
+		this.bindCommands();
+		this.panel.webview.html = this.renderView();
+	}
 
-    constructor(context: vscode.ExtensionContext, panel: vscode.WebviewPanel, path: string) {
-        this.context = context;
-        this.panel = panel;
-        this.path = path;
-        this.bindCommands();
-        this.panel.webview.html = this.renderView();
-    }
+	readData() {
+		let id = 1;
 
-    readData() {
-        let id = 1;
+		this.files = [];
+		this.data = [];
 
-        this.files = [];
-        this.data = [];
+		fs.readdirSync(this.path)
+			.filter((f) => f.endsWith(JSON_EX))
+			.forEach((fileName) => {
+				const file = fileName.replace(JSON_EX, "");
+				this.files.push(file);
 
-        fs.readdirSync(this.path).filter(f => f.endsWith(JSON_EX)).forEach(fileName => {
-            const file = fileName.replace(JSON_EX, '');
-            this.files.push(file);
+				try {
+					const fileData = JSON.parse(
+						fs.readFileSync(pathJoin(this.path, file + JSON_EX)).toString()
+					);
 
-            try {
-                const fileData = JSON.parse(fs.readFileSync(pathJoin(this.path, file + JSON_EX)).toString());
+					if (fileData) {
+						const keys = Object.keys(fileData);
 
-                if (fileData) {
-                    const keys = Object.keys(fileData);
+						keys.forEach((key) => {
+							const entry = this.data.find((x) => x.key === key);
 
-                    keys.forEach(key => {
-                        const entry = this.data.find(x => x.key === key);
+							if (entry) {
+								entry.values[file] = fileData[key];
+							} else {
+								this.data.push({
+									id: id++,
+									key: key,
+									errors: [],
+									values: { [file]: fileData[key] },
+								});
+							}
+						});
+					}
+				} catch {
+					vscode.window.showErrorMessage(`Failed to parse ${fileName}`);
+				}
+			});
+	}
 
-                        if (entry) {
-                            entry.values[file] = fileData[key];
-                        }
-                        else {
-                            this.data.push({
-                                id: id++,
-                                key: key,
-                                errors: [],
-                                values: { [file]: fileData[key] }
-                            });
-                        }
-                    });
-                }
-            }
-            catch {
-                vscode.window.showErrorMessage(`Failed to parse ${fileName}`);
-            }
-        });
-    }
+	renderView(): string {
+		const template = vscode.Uri.file(
+			pathJoin(this.context.extensionPath, "ui", "index.html")
+		);
 
-    renderView(): string {
-        const template = vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'index.html'));
+		const links = [
+			vscode.Uri.file(
+				pathJoin(this.context.extensionPath, "ui", "lib", "roboto.css")
+			),
+			vscode.Uri.file(
+				pathJoin(this.context.extensionPath, "ui", "lib", "fontawesome.min.css")
+			),
+			vscode.Uri.file(
+				pathJoin(this.context.extensionPath, "ui", "lib", "vuetify.min.css")
+			),
+		]
+			.map((u) => `<link rel="stylesheet" href="${this.getResourcePath(u)}">`)
+			.join("\n");
 
-        const links = [
-            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'roboto.css')),
-            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'fontawesome.min.css')),
-            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'vuetify.min.css'))
-        ].map(u => `<link rel="stylesheet" href="${this.getResourcePath(u)}">`).join('\n');
+		const scripts = [
+			vscode.Uri.file(
+				pathJoin(this.context.extensionPath, "ui", "lib", "vue.min.js")
+			),
+			vscode.Uri.file(
+				pathJoin(this.context.extensionPath, "ui", "lib", "vuetify.min.js")
+			),
+			vscode.Uri.file(pathJoin(this.context.extensionPath, "ui", "app.js")),
+		]
+			.map((s) => `<script src="${this.getResourcePath(s)}"></script>`)
+			.join("\n");
 
-        const scripts = [
-            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'vue.min.js')),
-            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'lib', 'vuetify.min.js')),
-            vscode.Uri.file(pathJoin(this.context.extensionPath, 'ui', 'app.js'))
-        ].map(s => `<script src="${this.getResourcePath(s)}"></script>`).join('\n');
+		return fs
+			.readFileSync(template.fsPath)
+			.toString()
+			.replace("HEAD_PLACEHOLDER", links)
+			.replace("SCRIPTS_PLACEHOLDER", scripts);
+	}
 
-        return fs.readFileSync(template.fsPath).toString()
-            .replace('HEAD_PLACEHOLDER', links)
-            .replace('SCRIPTS_PLACEHOLDER', scripts);
-    }
+	getResourcePath(uri: vscode.Uri): string {
+		return (
+			this.panel.webview.asWebviewUri
+				? this.panel.webview.asWebviewUri(uri)
+				: uri.with({ scheme: "vscode-resource" })
+		).toString();
+	}
 
-    getResourcePath(uri: vscode.Uri): string {
-        return (this.panel.webview.asWebviewUri ? this.panel.webview.asWebviewUri(uri) : uri.with({ scheme: 'vscode-resource' })).toString();
-    }
+	bindCommands() {
+		this.panel.webview.onDidReceiveMessage((message: ICommand) => {
+			switch (message.command) {
+				case "refresh":
+					this.refreshData();
+					return;
+				case "saveAll":
+					this.saveAll(message.data);
+					return;
+			}
+		});
+	}
 
-    bindCommands() {
-        this.panel.webview.onDidReceiveMessage((message: ICommand) => {
-            switch (message.command) {
-                case 'refresh':
-                    this.refreshData();
-                    return;
-                case 'saveAll':
-                    this.saveAll(message.data);
-                    return;
-                }
-            });
-    }
+	refreshData() {
+		this.readData();
 
-    refreshData() {
-        this.readData();
+		this.send({
+			command: "populateData",
+			data: {
+				files: this.files,
+				items: this.data.map((i) => {
+					return {
+						id: i.id,
+						key: i.key,
+						originalKey: i.key,
+						errors: i.errors,
+						...i.values,
+					};
+				}),
+			},
+		});
+		vscode.window.showInformationMessage(DATA_RERESHED);
+	}
 
-        this.send({
-            command: 'populateData',
-            data: {
-                files: this.files,
-                items: this.data.map(i => { return {
-                    id: i.id,
-                    key: i.key,
-                    originalKey: i.key,
-                    errors: i.errors,
-                    ...i.values
-                };
-            })
-            }
-        });
-        vscode.window.showInformationMessage(DATA_RERESHED);
-    }
+	saveAll(items: IDataEntry[]) {
+		const errors = this.validate(items);
 
-    saveAll(items: IDataEntry[]) {
-        const errors = this.validate(items);
+		if (errors.length > 0) {
+			this.send({
+				command: "showErrors",
+				data: { errors },
+			});
 
-        if (errors.length > 0)
-        {
-            this.send({
-                command: 'showErrors',
-                data: { errors }
-            });
+			vscode.window.showErrorMessage(SAVE_ERROR);
+		} else {
+			this.proceedSave(items);
+			this.refreshData();
+			vscode.window.showInformationMessage(SAVE_SUCCESS);
+		}
+	}
 
-            vscode.window.showErrorMessage(SAVE_ERROR);
-        }
-        else {
-            this.proceedSave(items);
-            this.refreshData();
-            vscode.window.showInformationMessage(SAVE_SUCCESS);
-        }
-    }
+	validate(items: IDataEntry[]): IValidationResult[] {
+		let errors: IValidationResult[] = [];
 
-    validate(items: IDataEntry[]): IValidationResult[] {
-        let errors: IValidationResult[] = [];
+		errors = items
+			.filter((x) => x.key === undefined || x.key === null || x.key === "")
+			.map((x) => {
+				return { ...x, errors: [Errors.emptyKey] };
+			});
 
-        errors = items.filter(x => x.key === undefined || x.key === null || x.key === '')
-            .map(x => {return {...x, errors: [ Errors.emptyKey ]};});;
-        
-        items.forEach(x => {
-            const dup = items.filter(y => !errors.some(d => d.key === x.key) && y.key === x.key && y.id !== x.id)
-                .map(x => {return {...x, errors: [ Errors.duplicatedKey ]};});
+		items.forEach((x) => {
+			const dup = items
+				.filter(
+					(y) =>
+						!errors.some((d) => d.key === x.key) &&
+						y.key === x.key &&
+						y.id !== x.id
+				)
+				.map((x) => {
+					return { ...x, errors: [Errors.duplicatedKey] };
+				});
 
-            if (dup.length > 0) {
-                errors = [...errors, ...dup, ...[x]];
-            }
-        });
-        
-        return errors;
-    }
+			if (dup.length > 0) {
+				errors = [...errors, ...dup, ...[x]];
+			}
+		});
 
-    proceedSave(items: IDataEntry[]) {
-        const mustOrder = vscode.workspace.getConfiguration('json-consolidator').get<boolean>('orderKeysOnSave');
-        const desc = vscode.workspace.getConfiguration('json-consolidator').get<string>('orderKeysDirection') === 'Descending';
-        
-        const keyComparer = (a: IDataEntry, b: IDataEntry): number => {
-            if (a.key < b.key) {
-                return desc ? 1 : -1;
-            }
+		return errors;
+	}
 
-            if (a.key > b.key) {
-                return desc ? -1 : 1;
-            }
+	proceedSave(items: IDataEntry[]) {
+		const mustOrder = vscode.workspace
+			.getConfiguration("json-consolidator")
+			.get<boolean>("orderKeysOnSave");
+		const desc =
+			vscode.workspace
+				.getConfiguration("json-consolidator")
+				.get<string>("orderKeysDirection") === "Descending";
 
-            return 0;
-        };
+		const keyComparer = (a: IDataEntry, b: IDataEntry): number => {
+			if (a.key < b.key) {
+				return desc ? 1 : -1;
+			}
 
-        this.files.forEach(f => {
-            
-            let content: IIndexable = {};
+			if (a.key > b.key) {
+				return desc ? -1 : 1;
+			}
 
-            if (mustOrder) {
-                items.sort(keyComparer).map(x => {
-                    content[x.key] = x[f] || '';
-                });
-            } else {
-                items.map(x => {
-                    content[x.key] = x[f] || '';
-                });
-            }
+			return 0;
+		};
 
-            const json = JSON.stringify(content, null, 4);
-            fs.writeFileSync(pathJoin(this.path, f + JSON_EX), json);
-        });
-    }
+		this.files.forEach((f) => {
+			let content: IIndexable = {};
 
-    private send(command: ICommand) {
-        this.panel.webview.postMessage(command);
-    }
+			if (mustOrder) {
+				items.sort(keyComparer).map((x) => {
+					content[x.key] = x[f] || "";
+				});
+			} else {
+				items.map((x) => {
+					content[x.key] = x[f] || "";
+				});
+			}
+
+			const json = JSON.stringify(content, null, 4);
+			fs.writeFileSync(pathJoin(this.path, f + JSON_EX), json);
+		});
+	}
+
+	private send(command: ICommand) {
+		this.panel.webview.postMessage(command);
+	}
 }

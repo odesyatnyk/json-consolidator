@@ -1,1 +1,1 @@
-export const DONT_SHOW_AGAIN = 'Don\'t show again';
+export const DONT_SHOW_AGAIN = "Don't show again";

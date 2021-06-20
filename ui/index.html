@@ -1,126 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        HEAD_PLACEHOLDER
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
-        <title>Json Consolidator</title>
-    </head>
-    <body>
-        <div id="app">
-            <v-app>
-                <v-app-bar app flat dark>
-                    <v-toolbar-title>Json Consolidator</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                    <v-col cols="6" class="pa-0">
-                        <v-text-field v-model="search" solo-inverted flat dense prepend-inner-icon="fa-search" hide-details clearable color="grey darken-3"></v-text-field>
-                    </v-col>
-                    <v-menu  dark open-on-hover bottom offset-y :close-on-content-click="false">
-                        <template #activator="{ on }">
-                            <v-btn icon v-on="on">
-                                <v-badge :value="showSettingsBadge" :color="errorsOnly ? 'error' : 'primary'" dot>
-                                    <v-icon>
-                                        fa-cog
-                                    </v-icon>
-                                </v-badge>
-                            </v-btn>
-                        </template>
-                        <v-list dark dense>
-                            <v-list-item dense>
-                                <v-switch v-model="searchIncludeNew" :disabled="errorsOnly" color="primary" dense inset label="Include new"></v-switch>
-                            </v-list-item>
-                            <v-list-item dense>
-                                <v-switch v-model="errorsOnly" color="error" dense inset label="Errors only" @change="onErrorsOnlyToggle"></v-switch>
-                            </v-list-item>
-                        </v-list>
-                    </v-menu>
+	<head>
+		HEAD_PLACEHOLDER
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"/>
+		<title>Json Consolidator</title>
+	</head>
+	<body>
+		<div id="app">
+			<v-app>
+				<v-app-bar app flat dark>
+					<v-toolbar-title>Json Consolidator</v-toolbar-title>
+					<v-spacer></v-spacer>
+					<v-col cols="6" class="pa-0">
+						<v-text-field
+							v-model="search"
+							solo-inverted
+							flat
+							dense
+							prepend-inner-icon="fa-search"
+							hide-details
+							clearable
+							color="grey darken-3"
+						></v-text-field>
+					</v-col>
+					<v-menu
+						dark
+						open-on-hover
+						bottom
+						offset-y
+						:close-on-content-click="false"
+					>
+						<template #activator="{ on }">
+							<v-btn icon v-on="on">
+								<v-badge
+									:value="showSettingsBadge"
+									:color="errorsOnly ? 'error' : 'primary'"
+									dot
+								>
+									<v-icon> fa-cog </v-icon>
+								</v-badge>
+							</v-btn>
+						</template>
+						<v-list dark dense>
+							<v-list-item dense>
+								<v-switch
+									v-model="searchIncludeNew"
+									:disabled="errorsOnly"
+									color="primary"
+									dense
+									inset
+									label="Include new"
+								></v-switch>
+							</v-list-item>
+							<v-list-item dense>
+								<v-switch
+									v-model="errorsOnly"
+									color="error"
+									dense
+									inset
+									label="Errors only"
+									@change="onErrorsOnlyToggle"
+								></v-switch>
+							</v-list-item>
+						</v-list>
+					</v-menu>
 
-                    <v-spacer></v-spacer>
-                    <v-btn icon @click="addRow">
-                        <v-tooltip bottom>
-                            <template #activator="{ on }">
-                                <v-icon v-on="on">
-                                    fa-plus
-                                </v-icon>
-                            </template>
-                            Add
-                        </v-tooltip>
-                    </v-btn>
-                    <v-btn icon @click="saveAll">
-                        <v-tooltip bottom>
-                            <template #activator="{ on }">
-                                <v-icon v-on="on">
-                                    fa-save
-                                </v-icon>
-                            </template>
-                            Save
-                        </v-tooltip>
-                    </v-btn>
-                    <v-btn icon @click="refresh">
-                        <v-tooltip bottom>
-                            <template #activator="{ on }">
-                                <v-icon v-on="on">
-                                    fa-sync
-                                </v-icon>
-                            </template>
-                            Refresh
-                        </v-tooltip>
-                    </v-btn>
-                </v-app-bar>
-                <v-main>
-                    <v-container fluid class="pa-0 rounded-0">
-                        <v-data-table :headers="headers"
-                                    :items="items"
-                                    disable-pagination
-                                    fixed-header
-                                    hide-default-footer
-                                    dark
-                                    height="calc(100vh - 50px)"
-                                    class="rounded-0"
-                                    :custom-filter="customFilter"
-                                    :custom-sort="customSort"
-                                    :sort-by="['key']"
-                                    :search="search"
-                                    :loading="loading">
+					<v-spacer></v-spacer>
+					<v-btn icon @click="addRow">
+						<v-tooltip bottom>
+							<template #activator="{ on }">
+								<v-icon v-on="on"> fa-plus </v-icon>
+							</template>
+							Add
+						</v-tooltip>
+					</v-btn>
+					<v-btn icon @click="saveAll">
+						<v-tooltip bottom>
+							<template #activator="{ on }">
+								<v-icon v-on="on"> fa-save </v-icon>
+							</template>
+							Save
+						</v-tooltip>
+					</v-btn>
+					<v-btn icon @click="refresh">
+						<v-tooltip bottom>
+							<template #activator="{ on }">
+								<v-icon v-on="on"> fa-sync </v-icon>
+							</template>
+							Refresh
+						</v-tooltip>
+					</v-btn>
+				</v-app-bar>
+				<v-main>
+					<v-container fluid class="pa-0 rounded-0">
+						<v-data-table
+							:headers="headers"
+							:items="items"
+							disable-pagination
+							fixed-header
+							hide-default-footer
+							dark
+							height="calc(100vh - 50px)"
+							class="rounded-0"
+							:custom-filter="customFilter"
+							:custom-sort="customSort"
+							:sort-by="['key']"
+							:search="search"
+							:loading="loading"
+						>
+							<template #item.Key="{ item }">
+								<v-text-field
+									v-model="item.key"
+									:error-messages="item.errors"
+									outlined
+									dense
+									filled
+								></v-text-field>
+							</template>
 
-                            <template #item.Key="{ item }">
-                                <v-text-field v-model="item.key" :error-messages="item.errors" outlined dense filled></v-text-field>
-                            </template>
+							<template
+								v-for="file in files"
+								:slot="`item.${file}`"
+								slot-scope="{ item }"
+							>
+								<v-text-field
+									v-model="item[file]"
+									class="mb-0"
+									dense
+									outlined
+									filled
+								></v-text-field>
+							</template>
 
-                            <template v-for="file in files" :slot="`item.${file}`" slot-scope="{ item }">
-                                <v-text-field v-model="item[file]" class="mb-0" dense outlined filled></v-text-field>
-                            </template>
+							<template #item.actions="{ item }">
+								<v-btn
+									icon
+									small
+									color="red lighten-2"
+									@click="deleteItem(item)"
+								>
+									<v-tooltip bottom>
+										<template #activator="{ on }">
+											<v-icon small v-on="on"> fa-trash </v-icon>
+										</template>
+										Delete
+									</v-tooltip>
+								</v-btn>
+							</template>
+						</v-data-table>
+					</v-container>
+				</v-main>
+			</v-app>
+		</div>
+		SCRIPTS_PLACEHOLDER
+		<style lang="text/css">
+			.v-data-table-header.v-data-table-header-mobile {
+				display: none;
+			}
 
-                            <template #item.actions="{ item }">
-                                <v-btn icon small color="red lighten-2" @click="deleteItem(item)">
-                                    <v-tooltip bottom>
-                                        <template #activator="{ on }">
-                                            <v-icon small v-on="on">
-                                                fa-trash
-                                            </v-icon>
-                                        </template>
-                                        Delete
-                                    </v-tooltip>
-                                </v-btn>
-                            </template>
+			.v-text-field__details {
+				margin-bottom: 4px !important;
+			}
 
-                        </v-data-table>
-                    </v-container>
-                </v-main>
-            </v-app>
-        </div>
-        SCRIPTS_PLACEHOLDER
-        <style lang="text/css">
-            .v-data-table-header.v-data-table-header-mobile {
-                display: none;
-            }
-
-            .v-text-field__details {
-                margin-bottom: 4px !important;
-            }
-
-            html {
-                overflow-y: hidden;
-            }
-        </style>
-    </body>
+			html {
+				overflow-y: hidden;
+			}
+		</style>
+	</body>
 </html>

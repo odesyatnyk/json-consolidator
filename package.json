@@ -2,12 +2,13 @@
 	"name": "json-consolidator",
 	"displayName": "json-consolidator",
 	"description": "",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"engines": {
-		"vscode": "^1.56.0"
+		"vscode": "^1.50.0"
 	},
 	"categories": [
-		"Other"
+		"Other",
+		"Visualization"
 	],
 	"activationEvents": [
 		"onCommand:json-consolidator.editor",
@@ -36,7 +37,7 @@
 				"json-consolidator.orderKeysOnSave": {
 					"default": true,
 					"type": "boolean",
-					"description": "Orders json keys"
+					"description": "Controls wether json file keys should be ordered on save"
 				},
 				"json-consolidator.orderKeysDirection": {
 					"default": "Ascending",
