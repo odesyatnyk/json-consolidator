@@ -18,7 +18,7 @@
 
 To open editor window of `json-consolidator` you just need to right click on target foldet containing json files and select `Json Consolidator - Editor`. Extension will automatically scan for all json files present and display them in editor. Since originally extensions is developed to edit `i18n` files, default directories where extension could be triggered are `i18n` and `locales`, it could be changed be means of extension configuration keys.
 
-![demo]('./.demo/demo.gif')
+![demo](./.demo/demo.gif)
 
 ## Configuration
 
