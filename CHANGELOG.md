@@ -1,3 +1,5 @@
-# Change Log
+# Changelog
 
-WIP - first release coming soon 🚀
+## [0.1.0] - 2021-06-20
+### Added
+* Initial release
