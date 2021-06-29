@@ -9,6 +9,7 @@
 		}),
 		data() {
 			return {
+				sortBy: ['key'],
 				search: "",
 				loading: false,
 				searchIncludeNew: false,
@@ -128,6 +129,7 @@
 			headers() {
 				return [
 					{
+						sortable: false,
 						value: "errors",
 						align: " d-none",
 						filter: (errors) => {
@@ -151,6 +153,7 @@
 						};
 					}),
 					{
+						sortable: false,
 						text: "",
 						value: "actions",
 						align: "end",

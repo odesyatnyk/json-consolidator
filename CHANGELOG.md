@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.1 - 2021-06-20
+* Fixed UI of ordering, now actions and hidden columns are not appearing in the order list
+
 ## 0.2.0 - 2021-06-20
 * Added pagination to the UI
 * Use globally Vuetify dark theme
