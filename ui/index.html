@@ -8,7 +8,7 @@
 	<body>
 		<div id="app">
 			<v-app>
-				<v-app-bar app flat>
+				<v-app-bar app flat :style="styleBackgroundDarken">
 					<v-col cols="6" class="pa-0">
 						<v-text-field
 							v-model="search"
@@ -39,7 +39,7 @@
 							</v-btn>
 						</template>
 						<v-list dense>
-							<v-list-item dense>
+							<v-list-item dense :style="styleBackground">
 								<v-switch
 									v-model="searchIncludeNew"
 									:disabled="errorsOnly"
@@ -49,7 +49,7 @@
 									label="Include new"
 								></v-switch>
 							</v-list-item>
-							<v-list-item dense>
+							<v-list-item dense :style="styleBackground">
 								<v-switch
 									v-model="errorsOnly"
 									color="error"
@@ -102,6 +102,7 @@
 							:sort-by="sortBy"
 							:search="search"
 							:loading="loading"
+							:style="styleBackground"
 						>
 							<template #item.Key="{ item }">
 								<v-textarea
@@ -165,6 +166,30 @@
 			html {
 				overflow-y: hidden;
 			}
+
+			.theme--light.v-data-table.v-data-table--fixed-header thead th,
+			.theme--dark.v-data-table.v-data-table--fixed-header thead th {
+				background: var(--vscode-editor-background);
+			}
+
+			.theme--dark.v-data-table>.v-data-table__wrapper>table>tbody>tr:hover:not(.v-data-table__expanded__content):not(.v-data-table__empty-wrapper) {
+				background: #61616161;
+			}
+
+			.theme--light.v-data-table>.v-data-table__wrapper>table>tbody>tr:hover:not(.v-data-table__expanded__content):not(.v-data-table__empty-wrapper) {
+				background: #eeeeeeee;
+			}
+
+			.theme--dark.v-list,
+			.theme--light.v-list {
+				background: var(--vscode-editor-background);
+			}
+
+			.theme--dark.v-chip:not(.v-chip--active),
+			.theme--light.v-chip:not(.v-chip--active) {
+				background: var(--vscode-sideBar-background);
+			}
+
 		</style>
 	</body>
 </html>

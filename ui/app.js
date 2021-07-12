@@ -1,12 +1,45 @@
 (function () {
+
+	const getCssVar = name => {
+		return getComputedStyle(document.documentElement).getPropertyValue(name);
+	};
+
+	const getTheme = () => {
+		return {
+			secondary: getCssVar('--vscode-editor-background'),
+			accent: getCssVar('--vscode-sideBar-background'),
+			error: getCssVar('--vscode-editorError-foreground'),
+			info: getCssVar('--vscode-editorInfo-foreground'),
+			success: getCssVar('--vscode-editorInfo-foreground'),
+			warning: getCssVar('--vscode-editorWarning-foreground'),
+		};
+	};
+
+	const isDark = () => {
+		const themeKind = document.querySelector('body').getAttribute('data-vscode-theme-kind');
+		return ['vscode-dark', 'vscode-high-contrast'].includes(themeKind);
+	};
+
+	const theme = getTheme();
+
+	const vuetifyOptions = {
+		icons: {
+			iconfont: "fa",
+		},
+		theme: {
+			dark: isDark(),
+			themes: {
+				light: theme,
+				dark: theme,
+			}
+		}
+	};
+
+	Vue.use(Vuetify);
+
 	new Vue({
 		el: "#app",
-		vuetify: new Vuetify({
-			icons: {
-				iconfont: "fa",
-			},
-			theme: { dark: true }
-		}),
+		vuetify: new Vuetify(vuetifyOptions),
 		data() {
 			return {
 				sortBy: ['key'],
@@ -24,6 +57,7 @@
 				this.handleMessage(event.data);
 			});
 
+			this.watchThemeChanges();
 			this.refresh();
 		},
 		methods: {
@@ -124,6 +158,27 @@
 					return 0;
 				}
 			},
+			watchThemeChanges() {
+				const observer = new MutationObserver(mutations => {
+					mutations.forEach(m => {
+						console.log(m);
+						if (m.type !== "attributes" && m.attributeName !== "class") {
+							return;
+						}
+						this.reloadVuetifyTheme();
+					});
+				});
+
+				document.querySelectorAll("body").forEach(el => observer.observe(el, {attributes: true}));
+			},
+			reloadVuetifyTheme() {
+				const theme = getTheme();
+
+				this.$vuetify.theme.themes.dark = theme;
+				this.$vuetify.theme.themes.light = theme;
+
+				this.$vuetify.theme.dark = isDark();
+			}
 		},
 		computed: {
 			headers() {
@@ -174,6 +229,16 @@
 			showSettingsBadge() {
 				return this.searchIncludeNew || this.errorsOnly;
 			},
+			styleBackground() {
+				return {
+					'background-color': this.$vuetify.theme.themes.light.secondary
+				};
+			},
+			styleBackgroundDarken() {
+				return {
+					'background-color': this.$vuetify.theme.themes.light.accent
+				};
+			}
 		},
 	});
 })();
